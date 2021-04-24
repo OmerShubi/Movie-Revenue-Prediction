@@ -1,3 +1,9 @@
 name: hw1_env
 dependencies:
-  - python=3.9.4
+  - python=3
+  - nb_conda
+  - notebook
+  - pip
+  - pip:
+      - pandas
+# TODO update based on actual packages installed and their versions

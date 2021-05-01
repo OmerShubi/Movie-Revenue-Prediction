@@ -1,6 +1,11 @@
 import argparse
 import numpy as np
 import pandas as pd
+import csv
+from pandas.plotting import scatter_matrix
+import matplotlib.pyplot as plt
+import seaborn as sns
+from scipy import stats
 
 
 # Parsing script arguments
@@ -9,7 +14,7 @@ parser.add_argument('tsv_path', type=str, help='tsv file path')
 args = parser.parse_args()
 
 # Reading input TSV
-data = pd.read_csv(args.tsv_path, sep="\t")
+data = pd.read_csv(args.tsv_path, sep="\t", quoting=csv.QUOTE_NONE)
 
 #####
 # TODO - your prediction code here

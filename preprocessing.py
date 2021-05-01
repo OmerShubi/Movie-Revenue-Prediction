@@ -57,37 +57,31 @@ def parse_data(data, max_order=2, train=True):
         data[f'cast_{i}_gender'] = data['cast'].apply(lambda x: x[i][1] - 1 if len(x) > i else None)
     data.drop("cast", inplace=True, axis=1)
 
-    # Create dummy variables
-    multi_dummy_columns = ["genres", "production_companies", "production_countries", "spoken_languages", "crew"]
-    for col in multi_dummy_columns:
-        data = data.join(data[col].str.join(sep='*').str.get_dummies(sep='*').add_prefix(f"{col}_")).drop(col, inplace=False, axis=1)
-    dummy_columns = ["collection_name", "original_language"]
-    for i in range(max_order):
-        dummy_columns.append(f'cast_{i}_name')
-    data = pd.get_dummies(data, columns=dummy_columns, dummy_na=True)
-
     # Convert Bool to 1 and 0
     data['video'] = data['video'].astype(int)
 
+    numerical_columns = ["popularity", "budget", "runtime", "vote_average", "vote_count"]
+    pipe = Pipeline([('standard_scaler', StandardScaler()), ('minmax_scaler', MinMaxScaler())], memory='scaler')
+
     if train:
+        # TODO check if working
         # Normalized numerical features
-        numerical_columns = ["popularity", "budget", "runtime", "vote_average", "vote_count"]
-        standard_scaler = StandardScaler()
-        data[numerical_columns] = standard_scaler.fit_transform(data[numerical_columns].to_numpy())
-        pipe = Pipeline([('scaler', StandardScaler()), ('svc', SVC())])
-        minmax_scaler = MinMaxScaler()
-        data[numerical_columns] = minmax_scaler.fit_transform(data[numerical_columns].to_numpy())
-        # TODO save StandardScaler & MinMaxScaler
-        with open('standard_scaler.pickle', 'wb') as file:
-            pickle.dump(standard_scaler, file)
-        with open('minmax_scaler.pickle', 'wb') as file:
-            pickle.dump(minmax_scaler, file)
+        data[numerical_columns] = pipe.fit_transform(data[numerical_columns].to_numpy())
+
+        # # TODO - change to on hot of sklearn & save it in train and use in test
+        # # Create dummy variables
+        # multi_dummy_columns = ["genres", "production_companies", "production_countries", "spoken_languages", "crew"]
+        # for col in multi_dummy_columns:
+        #     data = data.join(data[col].str.join(sep='*').str.get_dummies(sep='*').add_prefix(f"{col}_")).drop(col,
+        #                                                                                                       inplace=False,
+        #                                                                                                       axis=1)
+        # dummy_columns = ["collection_name", "original_language"]
+        # for i in range(max_order):
+        #     dummy_columns.append(f'cast_{i}_name')
+        # data = pd.get_dummies(data, columns=dummy_columns, dummy_na=True)
     else:
-        with open('standard_scaler.pickle', 'rb') as file:
-            standard_scaler = pickle.load(file)
-        with open('minmax_scaler.pickle', 'rb') as file:
-            minmax_scaler = pickle.load(file)
-        # TODO use pretrained scaler
+        # TODO use pretrained scaler & dummy variables
+        data[numerical_columns] = pipe.transform(data[numerical_columns].to_numpy())
         pass
 
     # Convert release_date to timestamp
@@ -102,5 +96,9 @@ if __name__ == '__main__':
     if os.path.exists(parsed_train_path):
         parsed_train_data = pd.read_pickle(parsed_train_path)
     else:
-        parsed_train_data = parse_data(train_data)
+        parsed_train_data = parse_data(train_data, train=False)
+        # TODO uncomment
+        # pd.to_pickle(parsed_train_data, parsed_train_path)
+
+    # TODO - out of memory on competition file?
     print(1)

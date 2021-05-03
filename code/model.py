@@ -7,11 +7,8 @@ import numpy as np
 import logging
 from pprint import pformat
 
-# TODO torch
-# TODO score instructions - make sure that the revenue prediction is >=0
-# TODO return score
 
-# TODO save model and load - check the results
+# TODO torch
 
 def my_custom_accuracy(y_true, y_pred):
     y_pred[y_pred<0] = 0.0
@@ -57,6 +54,7 @@ def create_and_configer_logger(log_name='log_file.log', level=logging.DEBUG):
     logger = logging.getLogger()
     return logger
 
+
 if __name__ == '__main__':
     logger = create_and_configer_logger(log_name='log_file.log', level=logging.INFO)
 
@@ -69,17 +67,22 @@ if __name__ == '__main__':
 
     logger.info("Finished loading data")
     my_custom_scorer = make_scorer(my_custom_accuracy, greater_is_better=True)
-    tpot = TPOTRegressor(generations=1, population_size=1, max_eval_time_mins=1,
-                         max_time_mins=2, verbosity=2,
-                         n_jobs=1, scoring=my_custom_scorer, log_file="log.log",
+    tpot = TPOTRegressor(generations=1,
+                         population_size=1,
+                         max_eval_time_mins=1,
+                         max_time_mins=2,
+                         verbosity=2,
+                         n_jobs=1,
+                         scoring=my_custom_scorer,
+                         log_file="tpot_log.log",
                          random_state=0,
                          periodic_checkpoint_folder = checkpoint_folder)
     tpot.fit(parsed_train_data, parsed_train_label)
     logger.info("Finished fitting the model")
     logger.info(f"The best pipeline \n {tpot.fitted_pipeline_}")
-    logger.info(f"Score on test data {tpot.score(parsed_test_data, parsed_test_label)}")
+    logger.info(f"Loss on test data {-tpot.score(parsed_test_data, parsed_test_label)}")
     logger.info(f"Trials \n {pformat(tpot.evaluated_individuals_)}")
-    tpot.export('best_model.py')
+    tpot.export('code/best_model.py')
 
 
 

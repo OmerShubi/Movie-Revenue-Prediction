@@ -126,7 +126,7 @@ if __name__ == '__main__':
     parse_test = True
 
     if parse_train:
-        train_path = 'train.tsv'
+        train_path = '../train.tsv'
         train_data = pd.read_csv(train_path, sep="\t", index_col='id', parse_dates=['release_date'])
         parsed_train_data, parsed_train_label = parse_data(train_data, train=True)
         with open(parsed_train_path, 'wb') as f:
@@ -134,7 +134,7 @@ if __name__ == '__main__':
             np.save(f, parsed_train_label)
 
     if parse_test:
-        test_path = 'test.tsv'
+        test_path = '../test.tsv'
         test_data = pd.read_csv(test_path, sep="\t", index_col='id', parse_dates=['release_date'])
         parsed_test_data, parsed_test_label = parse_data(test_data, train=False)
         with open(parsed_test_path, 'wb') as f:

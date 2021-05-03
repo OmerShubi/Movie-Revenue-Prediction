@@ -5,3 +5,6 @@ model_name = 'data/best_model.joblib'
 result_path = "prediction.csv"
 scaler_path = 'data/pipeline_scaler.pkl'
 encoder_path = 'data/encoders.pkl'
+train_path = 'train.tsv'
+test_path = 'test.tsv'
+max_values = 50

@@ -1,6 +1,5 @@
 import argparse
 import pandas as pd
-
 from model import my_custom_accuracy
 from preprocessing import parse_data
 from joblib import load
@@ -19,6 +18,7 @@ data = pd.read_csv(args.tsv_path, sep="\t", index_col='id', parse_dates=['releas
 parsed_data, parsed_label, parsed_index = parse_data(data, train=False)
 model = load(model_name)
 results = model.predict(parsed_data)
+results[results<0] = 0.0
 
 prediction_df = pd.DataFrame(columns=['id', 'revenue'])
 prediction_df['id'] = parsed_index

@@ -12,7 +12,7 @@ from pprint import pformat
 
 def my_custom_accuracy(y_true, y_pred):
     y_pred[y_pred<0] = 0.0
-    return -mean_squared_log_error(y_true, y_pred)
+    return -np.sqrt(mean_squared_log_error(y_true, y_pred))
 
 
 def create_and_configer_logger(log_name='log_file.log', level=logging.DEBUG):
@@ -82,7 +82,7 @@ if __name__ == '__main__':
     logger.info(f"The best pipeline \n {tpot.fitted_pipeline_}")
     logger.info(f"Loss on test data {-tpot.score(parsed_test_data, parsed_test_label)}")
     logger.info(f"Trials \n {pformat(tpot.evaluated_individuals_)}")
-    tpot.export('code/best_model.py')
+    tpot.export('best_model.py')
 
 
 

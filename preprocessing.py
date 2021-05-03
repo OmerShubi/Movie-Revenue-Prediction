@@ -15,7 +15,7 @@ from datetime import datetime
 from sklearn.pipeline import Pipeline
 import joblib
 from sklearn.compose import ColumnTransformer, make_column_transformer
-from config import parsed_train_path, parsed_test_path
+from config import parsed_train_path, parsed_test_path, scaler_path, encoder_path
 
 
 def treat_dict_column(data, old_col_name, new_col_name, key):
@@ -87,7 +87,7 @@ def parse_data(data, max_order=2, train=True):
         pipe = Pipeline([('imputer', SimpleImputer(missing_values=np.nan, strategy='mean')),
                          ('standard_scaler', StandardScaler()), ('minmax_scaler', MinMaxScaler(clip=True))])
         pipe.fit(data[numerical_columns].to_numpy())
-        joblib.dump(pipe, 'pipeline_scaler.pkl')
+        joblib.dump(pipe, scaler_path)
 
         # One hot Encoders fit
         encoders = {}
@@ -99,10 +99,10 @@ def parse_data(data, max_order=2, train=True):
             enc = MultiLabelBinarizer()
             enc.fit((data[col_m]))
             encoders[col_m] = enc
-        joblib.dump(encoders, 'encoders.pkl')
+        joblib.dump(encoders, encoder_path)
     else:
-        pipe = joblib.load('pipeline_scaler.pkl')
-        encoders = joblib.load('encoders.pkl')
+        pipe = joblib.load(scaler_path)
+        encoders = joblib.load(encoder_path)
 
     # Normalized numerical features
     data[numerical_columns] = pipe.transform(data[numerical_columns].to_numpy())
@@ -119,26 +119,28 @@ def parse_data(data, max_order=2, train=True):
         data.drop(col_m, inplace=True, axis=1)
     data_arr = np.concatenate([data.to_numpy()]+data_arr_dummies, axis=1)
 
-    return data_arr, data_label.to_numpy()
+    return data_arr, data_label.to_numpy(), data.index
 
 if __name__ == '__main__':
     parse_train = True
     parse_test = True
+    # TODO competition adjustments - no label
 
     if parse_train:
-        train_path = '../train.tsv'
+        train_path = 'train.tsv'
         train_data = pd.read_csv(train_path, sep="\t", index_col='id', parse_dates=['release_date'])
-        parsed_train_data, parsed_train_label = parse_data(train_data, train=True)
+        parsed_train_data, parsed_train_label, parsed_train_index = parse_data(train_data, train=True)
         with open(parsed_train_path, 'wb') as f:
             np.save(f, parsed_train_data)
             np.save(f, parsed_train_label)
+            np.save(f, parsed_train_index)
 
     if parse_test:
-        test_path = '../test.tsv'
+        test_path = 'test.tsv'
         test_data = pd.read_csv(test_path, sep="\t", index_col='id', parse_dates=['release_date'])
-        parsed_test_data, parsed_test_label = parse_data(test_data, train=False)
+        parsed_test_data, parsed_test_label, parsed_test_index = parse_data(test_data, train=False)
         with open(parsed_test_path, 'wb') as f:
             np.save(f, parsed_test_data)
             np.save(f, parsed_test_label)
+            np.save(f, parsed_test_index)
 
-    # TODO competition adjustments - no label

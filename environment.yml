@@ -5,9 +5,10 @@ dependencies:
   - notebook
   - pip
   - pip:
-      - pandas
+      - pandas==1.2.4
       - matplotlib==3.4.1
       - scipy==1.6.3
       - seaborn==0.11.1
       - scikit-learn==0.24.2
+      - TPOT==0.11.7
 # TODO update based on actual packages installed and their versions

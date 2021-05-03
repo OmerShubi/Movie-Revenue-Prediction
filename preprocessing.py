@@ -15,6 +15,7 @@ from datetime import datetime
 from sklearn.pipeline import Pipeline
 import joblib
 from sklearn.compose import ColumnTransformer, make_column_transformer
+from config import parsed_train_path, parsed_test_path
 
 
 def treat_dict_column(data, old_col_name, new_col_name, key):
@@ -121,25 +122,23 @@ def parse_data(data, max_order=2, train=True):
     return data_arr, data_label.to_numpy()
 
 if __name__ == '__main__':
-    train_path = 'train.tsv'
-    train_data = pd.read_csv(train_path, sep="\t", index_col='id', parse_dates=['release_date'])
-    parsed_train_path = "parsed_train.pkl"
-    if os.path.exists(parsed_train_path):
-        parsed_train_data, parsed_train_label = pd.read_pickle(parsed_train_path)
-    else:
-        parsed_train_data, parsed_train_label = parse_data(train_data, train=True)
-        # TODO uncomment
-        # pd.to_pickle((parsed_train_data,parsed_train_label), parsed_train_path)
+    parse_train = True
+    parse_test = True
 
-    test_path = 'test.tsv'
-    test_data = pd.read_csv(test_path, sep="\t", index_col='id', parse_dates=['release_date'])
-    parsed_test_path = "parsed_test.pkl"
-    if os.path.exists(parsed_test_path):
-        parsed_test_data, parsed_test_label = pd.read_pickle(parsed_test_path)
-    else:
+    if parse_train:
+        train_path = 'train.tsv'
+        train_data = pd.read_csv(train_path, sep="\t", index_col='id', parse_dates=['release_date'])
+        parsed_train_data, parsed_train_label = parse_data(train_data, train=True)
+        with open(parsed_train_path, 'wb') as f:
+            np.save(f, parsed_train_data)
+            np.save(f, parsed_train_label)
+
+    if parse_test:
+        test_path = 'test.tsv'
+        test_data = pd.read_csv(test_path, sep="\t", index_col='id', parse_dates=['release_date'])
         parsed_test_data, parsed_test_label = parse_data(test_data, train=False)
-        # TODO uncomment
-        # pd.to_pickle((parsed_test_data,parsed_test_label), parsed_test_path)
+        with open(parsed_test_path, 'wb') as f:
+            np.save(f, parsed_test_data)
+            np.save(f, parsed_test_label)
 
     # TODO competition adjustments - no label
-    print(1)

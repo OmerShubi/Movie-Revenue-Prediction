@@ -56,7 +56,7 @@ def create_and_configer_logger(log_name='log_file.log', level=logging.DEBUG):
 
 
 if __name__ == '__main__':
-    logger = create_and_configer_logger(log_name='log_file.log', level=logging.INFO)
+    logger = create_and_configer_logger(log_name=our_log_path, level=logging.INFO)
 
     with open(parsed_train_path, 'rb') as f:
         parsed_train_data = np.load(f)

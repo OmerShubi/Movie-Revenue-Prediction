@@ -67,16 +67,17 @@ if __name__ == '__main__':
 
     logger.info("Finished loading data")
     my_custom_scorer = make_scorer(my_custom_accuracy, greater_is_better=True)
-    tpot = TPOTRegressor(generations=1,
-                         population_size=1,
-                         max_eval_time_mins=1,
-                         max_time_mins=2,
+    tpot = TPOTRegressor(generations=1,#100,
+                         population_size=1,#100,
+                         max_eval_time_mins=2,#None,
+                         max_time_mins=2,#5,
                          verbosity=2,
-                         n_jobs=1,
+                         n_jobs=-1,
                          scoring=my_custom_scorer,
                          log_file=tpot_log_path,
                          random_state=0,
-                         periodic_checkpoint_folder = checkpoint_folder)
+                         periodic_checkpoint_folder=checkpoint_folder,
+                         memory="auto")
     tpot.fit(parsed_train_data, parsed_train_label)
     logger.info("Finished fitting the model")
     logger.info(f"The best pipeline \n {tpot.fitted_pipeline_}")

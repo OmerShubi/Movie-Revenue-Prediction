@@ -2,7 +2,7 @@ from tpot import TPOTRegressor
 import pandas as pd
 from sklearn.metrics import mean_squared_log_error
 from sklearn.metrics import make_scorer
-from config import parsed_train_path, parsed_test_path, checkpoint_folder
+from config import parsed_train_path, parsed_test_path, checkpoint_folder, our_log_path, tpot_log_path
 import numpy as np
 import logging
 from pprint import pformat
@@ -74,7 +74,7 @@ if __name__ == '__main__':
                          verbosity=2,
                          n_jobs=1,
                          scoring=my_custom_scorer,
-                         log_file="tpot_log.log",
+                         log_file=tpot_log_path,
                          random_state=0,
                          periodic_checkpoint_folder = checkpoint_folder)
     tpot.fit(parsed_train_data, parsed_train_label)

@@ -17,7 +17,7 @@ import joblib
 from sklearn.compose import ColumnTransformer, make_column_transformer
 from config import parsed_train_path, parsed_test_path, scaler_path, encoder_path, train_path, test_path, max_values
 from collections import Counter
-
+import tensorflow_hub as hub
 
 def treat_dict_column(data, old_col_name, new_col_name, key):
     data[old_col_name].fillna('{}', inplace = True)
@@ -26,27 +26,19 @@ def treat_dict_column(data, old_col_name, new_col_name, key):
     data.drop(old_col_name, inplace=True, axis=1)
     return data
 
-def treat_list_of_dicts_column_to_one_list(data, col_name, key):
+def treat_list_of_dicts_column(data, col_name, key="name"):
     data[col_name].fillna('[]', inplace=True)
     data[col_name] = data[col_name].apply(literal_eval)
-    data[col_name] = data[col_name].apply(lambda x: [d[key] for d in x] if x != [] else ["nan"])
+    if col_name == "crew":
+        data[col_name] = data[col_name].apply(lambda x: apply_filter(x,key,"job",["Producer", "Director", "Writer"]))
+    else:
+        data[col_name] = data[col_name].apply(lambda x: [d[key] for d in x] if x != [] else ["nan"])
     return data
 
 def apply_filter(x, key, filter_by, filter_list):
     res = [d[key] for d in x if d[filter_by] in filter_list]
     res = res if res != [] else["nan"]
     return res
-
-def treat_list_of_dicts_column_to_multiple_lists(data, col_name, keys):
-    data[col_name].fillna('[]', inplace=True)
-    data[col_name] = data[col_name].apply(literal_eval)
-    if col_name == "crew":
-        key = keys[0]
-        filter_by = keys[1]
-        data[col_name] = data[col_name].apply(lambda x: apply_filter(x,key,filter_by,["Producer", "Director", "Writer"]))
-    else:
-        data[col_name] = data[col_name].apply(lambda x: [[d[key] for key in keys] for d in x])
-    return data
 
 def encode_date(data, col, max_val):
     data[col + '_sin'] = np.sin(2 * np.pi * data[col]/max_val)
@@ -65,46 +57,7 @@ def save_most_common(data, col_name, k):
     data[col_name] = data[col_name].apply(lambda x: apply_filter_most_common(x,most_common_keys))
     return data
 
-def parse_data(data, max_order=2, train=True):
-    data_label = data["revenue"]
-    # remove features - unreasonable & 1 uniqe value features
-    data.drop(["backdrop_path", "homepage", "imdb_id", "status", "poster_path", "revenue"], inplace=True, axis=1)
-
-    # Flatten nested objects
-    data = treat_dict_column(data, "belongs_to_collection", "collection_name", "name")
-    data = treat_list_of_dicts_column_to_multiple_lists(data, 'cast', ['name', 'gender'])
-    data = treat_list_of_dicts_column_to_one_list(data, 'genres', 'name')
-    data = treat_list_of_dicts_column_to_one_list(data, 'spoken_languages', 'iso_639_1')
-    data = treat_list_of_dicts_column_to_one_list(data, 'production_countries', 'iso_3166_1')
-    data = treat_list_of_dicts_column_to_multiple_lists(data, 'crew', ['name', 'job'])
-    data = treat_list_of_dicts_column_to_one_list(data, 'production_companies', 'name')
-
-    multi_dummy_columns = ["genres", "spoken_languages", "production_countries", "crew", "production_companies"]
-    for col in multi_dummy_columns:
-        data = save_most_common(data, col, max_values)
-
-    # Save only the first max_order cast info a split it into 2*max_order columns
-    for i in range(max_order):
-        data[f'cast_{i}_name'] = data['cast'].apply(lambda x: x[i][0] if len(x) > i else None)
-        data[f'cast_{i}_gender'] = data['cast'].apply(lambda x: x[i][1] if len(x) > i else None)
-    data.drop("cast", inplace=True, axis=1)
-
-    # TODO embedding features
-    #data = treat_list_of_dicts_column_to_one_list(data, 'Keywords', 'name')
-    embedding_features = ["original_title", "overview", "title", "tagline", "Keywords"]
-    data.drop(embedding_features, inplace=True, axis=1)
-
-    #
-    # data['cast_size'] = data['cast'].apply(lambda x: len(x))
-    # data['cast_size'].hist(bins=50)
-    # plt.savefig(f"cast_size.png", bbox_inches='tight')
-    # data.drop("cast_size", inplace=True, axis=1)
-
-    # Convert Bool to 1 and 0
-    data['video'].fillna(0, inplace=True)
-    data['video'] = data['video'].astype(int)
-
-    # Convert release_date to month,day,month_sin,month_cos,day_sin,day_cos,weekend
+def process_date_feature(data):
     data["release_date"].fillna(method="pad", inplace=True)
     data['month'] = data.release_date.dt.month
     data = encode_date(data, 'month', 12)
@@ -113,14 +66,39 @@ def parse_data(data, max_order=2, train=True):
     day_names = data.release_date.dt.day_name()
     data['is_weekend'] = day_names.apply(lambda x: 1 if x in ['Saturday', 'Sunday'] else 0)
     data.drop(["release_date"], inplace=True, axis=1)
-    #data['release_date'] = data['release_date'].apply(lambda x: datetime.timestamp(x))
+    return data
+
+def parse_data(data, train=True):
+    data_label = data["revenue"]
+    # remove features - unreasonable & 1 uniqe value features
+    data.drop(["backdrop_path", "homepage", "imdb_id", "status", "poster_path", "revenue"], inplace=True, axis=1)
 
     numerical_columns = ["popularity", "budget", "runtime", "vote_average", "vote_count",
                          "month_sin", "month_cos", "day_sin", "day_cos", "month", "day"]
     dummy_columns = ["collection_name", "original_language"]
-    for i in range(max_order):
-        dummy_columns.append(f'cast_{i}_name')
-        dummy_columns.append(f'cast_{i}_gender')
+    multi_dummy_columns = ['cast', 'crew', 'genres', 'spoken_languages', 'production_companies',
+                           'production_countries', 'Keywords']
+    embedding_features = ["original_title", "overview", "title", "tagline"]
+
+    # Flatten nested objects
+    data = treat_dict_column(data, "belongs_to_collection", "collection_name", "name")
+    for col in multi_dummy_columns:
+        data = treat_list_of_dicts_column(data, col)
+        data = save_most_common(data, col, max_values)
+
+    embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
+    data_arr_embed = []
+    for col in embedding_features:
+        data[col].fillna('', inplace=True)
+        data_arr_embed.append(embed(data[col].to_numpy()))
+    data.drop(embedding_features, inplace=True, axis=1)
+
+    # Convert Bool to 1 and 0
+    data['video'].fillna(0, inplace=True)
+    data['video'] = data['video'].astype(int)
+
+    # Convert release_date to month,day,month_sin,month_cos,day_sin,day_cos,weekend
+    data = process_date_feature(data)
 
     if train:
         # Normalized numerical features
@@ -157,7 +135,7 @@ def parse_data(data, max_order=2, train=True):
         enc = encoders[col_m]
         data_arr_dummies.append(enc.transform((data[col_m])))
         data.drop(col_m, inplace=True, axis=1)
-    data_arr = np.concatenate([data.to_numpy()]+data_arr_dummies, axis=1)
+    data_arr = np.concatenate([data.to_numpy()] + data_arr_dummies + data_arr_embed, axis=1)
 
     return data_arr, data_label.to_numpy(), data.index
 
@@ -186,7 +164,7 @@ if __name__ == '__main__':
             np.save(f, parsed_train_data)
             np.save(f, parsed_train_label)
             np.save(f, parsed_train_index)
-        print(f"Number of features {train_data.shape[1]}")
+        print(f"Number of features {parsed_train_data.shape[1]}")
 
     if parse_test:
         test_data = pd.read_csv(test_path, sep="\t", index_col='id', parse_dates=['release_date'])

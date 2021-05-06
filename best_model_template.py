@@ -30,7 +30,12 @@ if __name__ == '__main__':
         parsed_test_label = np.load(f)
 
     # Change the model
-    exported_pipeline = DecisionTreeRegressor(max_depth=2, min_samples_leaf=7, min_samples_split=9)
+    # Average CV score on the training set was: -2.6181800521534355
+    exported_pipeline = make_pipeline(
+        SelectFwe(score_func=f_regression, alpha=0.048),
+        StackingEstimator(estimator=LassoLarsCV(normalize=False)),
+        DecisionTreeRegressor(max_depth=10, min_samples_leaf=7, min_samples_split=20)
+    )
 
     # Fix random state in exported estimator
     if hasattr(exported_pipeline, 'random_state'):

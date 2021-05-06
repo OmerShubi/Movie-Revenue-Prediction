@@ -46,17 +46,27 @@ if __name__ == '__main__':
         parsed_test_label = np.load(f)
 
     logger.info("Finished loading data")
+    generations = 50
+    population_size = 10
+    max_eval_time_mins = 5
+    max_time_mins = None
+    n_jobs = 1
+    config_dict = "TPOT light"
+    logger.info(f"Run params: {generations=}, {population_size=}, {max_eval_time_mins=}, {max_time_mins=}"
+                f"{n_jobs=}, {config_dict=}")
+
     my_custom_scorer = make_scorer(my_custom_accuracy, greater_is_better=True)
-    tpot = TPOTRegressor(generations=50,
-                         population_size=10,
-                         max_eval_time_mins=5,
-                         max_time_mins=None,
+    tpot = TPOTRegressor(generations=generations,
+                         population_size=population_size,
+                         max_eval_time_mins=max_eval_time_mins,
+                         max_time_mins=max_time_mins,
                          verbosity=3,
-                         n_jobs=1,
+                         n_jobs=n_jobs,
                          scoring=my_custom_scorer,
                          random_state=1,
                          periodic_checkpoint_folder=checkpoint_folder,
-                         config_dict="TPOT light")
+                         config_dict=config_dict)
+
     tpot.fit(parsed_train_data, parsed_train_label)
     logger.info("Finished fitting the model")
     logger.info(f"The best pipeline \n {tpot.fitted_pipeline_}")

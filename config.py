@@ -1,3 +1,5 @@
+import numpy as np
+
 parsed_train_path = "data/parsed_train.npy"
 parsed_test_path = "data/parsed_test.npy"
 checkpoint_folder = "check-points"
@@ -10,3 +12,113 @@ test_path = 'test.tsv'
 max_values = 5000
 our_log_path = 'log/training_log.log'
 tpot_log_path = "log/tpot_log.log"
+custom_regressor_config_dict = {
+
+    'sklearn.ensemble.ExtraTreesRegressor': {
+        'n_estimators': [100],
+        'max_features': np.arange(0.05, 1.01, 0.05),
+        'min_samples_split': range(2, 21),
+        'min_samples_leaf': range(1, 21),
+        'bootstrap': [True, False]
+    },
+
+    'sklearn.ensemble.GradientBoostingRegressor': {
+        'n_estimators': [100],
+        'loss': ["ls", "lad", "huber", "quantile"],
+        'learning_rate': [1e-3, 1e-2, 1e-1, 0.5, 1.],
+        'max_depth': range(1, 11),
+        'min_samples_split': range(2, 21),
+        'min_samples_leaf': range(1, 21),
+        'subsample': np.arange(0.05, 1.01, 0.05),
+        'max_features': np.arange(0.05, 1.01, 0.05),
+        'alpha': [0.75, 0.8, 0.85, 0.9, 0.95, 0.99]
+    },
+
+    'sklearn.ensemble.AdaBoostRegressor': {
+        'n_estimators': [100],
+        'learning_rate': [1e-3, 1e-2, 1e-1, 0.5, 1.],
+        'loss': ["linear", "square", "exponential"]
+    },
+
+    'sklearn.ensemble.RandomForestRegressor': {
+        'n_estimators': [100],
+        'max_features': np.arange(0.05, 1.01, 0.05),
+        'min_samples_split': range(2, 21),
+        'min_samples_leaf': range(1, 21),
+        'bootstrap': [True, False]
+    },
+
+    'xgboost.XGBRegressor': {
+        'n_estimators': [100],
+        'max_depth': range(1, 11),
+        'learning_rate': [1e-3, 1e-2, 1e-1, 0.5, 1.],
+        'subsample': np.arange(0.05, 1.01, 0.05),
+        'min_child_weight': range(1, 21),
+        'n_jobs': [1],
+        'verbosity': [0],
+        'objective': ['reg:squarederror']
+    },
+
+    'sklearn.linear_model.SGDRegressor': {
+        'loss': ['squared_loss', 'huber', 'epsilon_insensitive'],
+        'penalty': ['elasticnet'],
+        'alpha': [0.0, 0.01, 0.001],
+        'learning_rate': ['invscaling', 'constant'],
+        'fit_intercept': [True, False],
+        'l1_ratio': [0.25, 0.0, 1.0, 0.75, 0.5],
+        'eta0': [0.1, 1.0, 0.01],
+        'power_t': [0.5, 0.0, 1.0, 0.1, 100.0, 10.0, 50.0]
+    },
+
+    # Preprocessors
+    'sklearn.decomposition.FastICA': {
+        'tol': np.arange(0.0, 1.01, 0.05)
+    },
+
+    'sklearn.decomposition.PCA': {
+        'svd_solver': ['randomized'],
+        'iterated_power': range(1, 11)
+    },
+
+    'sklearn.preprocessing.PolynomialFeatures': {
+        'degree': [2],
+        'include_bias': [False],
+        'interaction_only': [False]
+    },
+
+    'sklearn.kernel_approximation.RBFSampler': {
+        'gamma': np.arange(0.0, 1.01, 0.05)
+    },
+
+    'tpot.builtins.ZeroCount': {
+    },
+
+    # Selectors
+    'sklearn.feature_selection.SelectFwe': {
+        'alpha': np.arange(0, 0.05, 0.001),
+        'score_func': {
+            'sklearn.feature_selection.f_regression': None
+        }
+    },
+
+    'sklearn.feature_selection.SelectPercentile': {
+        'percentile': range(1, 100),
+        'score_func': {
+            'sklearn.feature_selection.f_regression': None
+        }
+    },
+
+    'sklearn.feature_selection.VarianceThreshold': {
+        'threshold': [0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.2]
+    },
+
+    'sklearn.feature_selection.SelectFromModel': {
+        'threshold': np.arange(0, 1.01, 0.05),
+        'estimator': {
+            'sklearn.ensemble.ExtraTreesRegressor': {
+                'n_estimators': [100],
+                'max_features': np.arange(0.05, 1.01, 0.05)
+            }
+        }
+    }
+}

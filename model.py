@@ -2,7 +2,8 @@ from tpot import TPOTRegressor
 import pandas as pd
 from sklearn.metrics import mean_squared_log_error
 from sklearn.metrics import make_scorer
-from config import parsed_train_path, parsed_test_path, checkpoint_folder, our_log_path, tpot_log_path
+from config import parsed_train_path, parsed_test_path, checkpoint_folder, our_log_path, tpot_log_path, \
+    custom_regressor_config_dict
 import numpy as np
 import logging
 from pprint import pformat
@@ -46,14 +47,13 @@ if __name__ == '__main__':
         parsed_test_label = np.load(f)
 
     logger.info("Finished loading data")
-    generations = 50
+    generations = None
     population_size = 10
-    max_eval_time_mins = 5
-    max_time_mins = None
+    max_eval_time_mins = 20
+    max_time_mins = 2160
     n_jobs = 1
-    config_dict = "TPOT light"
     logger.info(f"Run params: {generations=}, {population_size=}, {max_eval_time_mins=}, {max_time_mins=}"
-                f"{n_jobs=}, {config_dict=}")
+                f"{n_jobs=}, {custom_regressor_config_dict=}")
 
     my_custom_scorer = make_scorer(my_custom_accuracy, greater_is_better=True)
     tpot = TPOTRegressor(generations=generations,
@@ -65,7 +65,7 @@ if __name__ == '__main__':
                          scoring=my_custom_scorer,
                          random_state=1,
                          periodic_checkpoint_folder=checkpoint_folder,
-                         config_dict=config_dict)
+                         config_dict=custom_regressor_config_dict)
 
     tpot.fit(parsed_train_data, parsed_train_label)
     logger.info("Finished fitting the model")
@@ -73,6 +73,7 @@ if __name__ == '__main__':
     logger.info(f"Loss on test data {-tpot.score(parsed_test_data, parsed_test_label)}")
     logger.info(f"Trials \n {pformat(tpot.evaluated_individuals_)}")
     tpot.export('best_model.py')
+
 
 
 

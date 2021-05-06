@@ -8,32 +8,12 @@ import logging
 from pprint import pformat
 
 
-# TODO torch
-
 def my_custom_accuracy(y_true, y_pred):
     y_pred[y_pred<0] = 0.0
     return -np.sqrt(mean_squared_log_error(y_true, y_pred))
 
 
-def create_and_configer_logger(log_name='log_file.log', level=logging.DEBUG):
-    """
-    Sets up a logger that works across files.
-    The logger prints to console, and to log_name log file.
-
-    Example usage:
-        In main function:
-            logger = create_and_configer_logger(log_name='myLog.log')
-        Then in all other files:
-            logger = logging.getLogger(_name_)
-
-        To add records to log:
-            logger.debug(f"New Log Message. Value of x is {x}")
-
-    Args:
-        log_name: str, log file name
-
-    Returns: logger
-    """
+def create_and_configer_logger(log_name, level=logging.DEBUG):
     # set up logging to file
     logging.basicConfig(
         filename=log_name,
@@ -67,17 +47,16 @@ if __name__ == '__main__':
 
     logger.info("Finished loading data")
     my_custom_scorer = make_scorer(my_custom_accuracy, greater_is_better=True)
-    tpot = TPOTRegressor(generations=1,#100,
-                         population_size=1,#100,
-                         max_eval_time_mins=2,#None,
-                         max_time_mins=2,#5,
-                         verbosity=2,
-                         n_jobs=-1,
+    tpot = TPOTRegressor(generations=50,
+                         population_size=10,
+                         max_eval_time_mins=5,
+                         max_time_mins=None,
+                         verbosity=3,
+                         n_jobs=1,
                          scoring=my_custom_scorer,
-                         log_file=tpot_log_path,
-                         random_state=0,
+                         random_state=1,
                          periodic_checkpoint_folder=checkpoint_folder,
-                         memory="auto")
+                         config_dict="TPOT light")
     tpot.fit(parsed_train_data, parsed_train_label)
     logger.info("Finished fitting the model")
     logger.info(f"The best pipeline \n {tpot.fitted_pipeline_}")

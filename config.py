@@ -8,5 +8,5 @@ encoder_path = 'data/encoders.pkl'
 train_path = 'train.tsv'
 test_path = 'test.tsv'
 max_values = 5000
-our_log_path = 'training_log.log'
-tpot_log_path = "tpot_log.log"
+our_log_path = 'log/training_log.log'
+tpot_log_path = "log/tpot_log.log"

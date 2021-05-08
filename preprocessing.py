@@ -1,23 +1,12 @@
 from ast import literal_eval
-import argparse
 import numpy as np
 import pandas as pd
-import csv
-from pandas.plotting import scatter_matrix
-import matplotlib.pyplot as plt
-import seaborn as sns
-from scipy import stats
 from sklearn.preprocessing import StandardScaler, MinMaxScaler, OneHotEncoder, MultiLabelBinarizer
 from sklearn.impute import SimpleImputer
-import os
-import pickle
-from datetime import datetime
 from sklearn.pipeline import Pipeline
 import joblib
-from sklearn.compose import ColumnTransformer, make_column_transformer
-from config import parsed_train_path, parsed_test_path, scaler_path, encoder_path, train_path, test_path, max_values
+from config import parsed_train_path, parsed_test_path, scaler_path, encoder_path, train_path, test_path, max_values, stop_words
 from collections import Counter
-import tensorflow_hub as hub
 
 def treat_dict_column(data, old_col_name, new_col_name, key):
     data[old_col_name].fillna('{}', inplace = True)
@@ -68,6 +57,10 @@ def process_date_feature(data):
     data.drop(["release_date"], inplace=True, axis=1)
     return data
 
+def treat_str(data, col_name):
+    data[col_name] = data[col_name].apply(lambda x: [w.lower() for w in x.split(" ") if w.lower() not in stop_words])
+    return data
+
 def parse_data(data, train=True):
     data_label = data["revenue"]
     # remove features - unreasonable & 1 uniqe value features
@@ -84,14 +77,16 @@ def parse_data(data, train=True):
     data = treat_dict_column(data, "belongs_to_collection", "collection_name", "name")
     for col in multi_dummy_columns:
         data = treat_list_of_dicts_column(data, col)
-        data = save_most_common(data, col, max_values)
+        if train:
+            data = save_most_common(data, col, max_values)
 
-    embed = hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
-    data_arr_embed = []
     for col in embedding_features:
         data[col].fillna('', inplace=True)
-        data_arr_embed.append(embed(data[col].to_numpy()))
-    data.drop(embedding_features, inplace=True, axis=1)
+        data = treat_str(data, col)
+        if train:
+            data = save_most_common(data, col, max_values)
+
+    multi_dummy_columns = multi_dummy_columns + embedding_features
 
     # Convert Bool to 1 and 0
     data['video'].fillna(0, inplace=True)
@@ -135,7 +130,7 @@ def parse_data(data, train=True):
         enc = encoders[col_m]
         data_arr_dummies.append(enc.transform((data[col_m])))
         data.drop(col_m, inplace=True, axis=1)
-    data_arr = np.concatenate([data.to_numpy()] + data_arr_dummies + data_arr_embed, axis=1)
+    data_arr = np.concatenate([data.to_numpy()] + data_arr_dummies, axis=1)
 
     return data_arr, data_label.to_numpy(), data.index
 
@@ -150,8 +145,6 @@ def create_sample(data):
 if __name__ == '__main__':
     parse_train = True
     parse_test = True
-    # TODO competition adjustments - no label
-
     # TODO check none values on the final features
     # create_sample(pd.read_csv(test_path, sep="\t", index_col='id', parse_dates=['release_date']))
     # sample_data = pd.read_csv("sample.tsv", sep="\t", index_col='id', parse_dates=['release_date'])

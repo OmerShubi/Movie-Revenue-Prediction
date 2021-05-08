@@ -4,6 +4,8 @@ from model import my_custom_accuracy
 from preprocessing import parse_data
 from joblib import load
 from config import model_name, result_path
+import warnings
+warnings.filterwarnings("ignore")
 
 # Parsing script arguments
 parser = argparse.ArgumentParser(description='Process input')
@@ -14,7 +16,6 @@ args = parser.parse_args()
 data = pd.read_csv(args.tsv_path, sep="\t", index_col='id', parse_dates=['release_date'])
 
 # Parse Data
-# TODO competition adjustments - no label
 parsed_data, parsed_label, parsed_index = parse_data(data, train=False)
 model = load(model_name)
 results = model.predict(parsed_data)

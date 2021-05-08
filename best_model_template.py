@@ -13,6 +13,15 @@ from sklearn.pipeline import make_pipeline, make_union
 from sklearn.tree import DecisionTreeRegressor
 from tpot.builtins import StackingEstimator
 from tpot.export_utils import set_param_recursive
+import numpy as np
+import pandas as pd
+from sklearn.ensemble import ExtraTreesRegressor
+from sklearn.feature_selection import SelectFwe, f_regression
+from sklearn.model_selection import train_test_split
+from sklearn.pipeline import make_pipeline, make_union
+from tpot.builtins import StackingEstimator
+from xgboost import XGBRegressor
+from tpot.export_utils import set_param_recursive
 
 
 
@@ -39,11 +48,24 @@ if __name__ == '__main__':
         parsed_test_label = np.load(f)
 
     # Change the model
-    # Average CV score on the training set was: -2.6181800521534355
+    # # Average CV score on the training set was: -2.6181800521534355
+    # exported_pipeline = make_pipeline(
+    #     SelectFwe(score_func=f_regression, alpha=0.048),
+    #     StackingEstimator(estimator=LassoLarsCV(normalize=False)),
+    #     DecisionTreeRegressor(max_depth=10, min_samples_leaf=7, min_samples_split=20)
+    # )
     exported_pipeline = make_pipeline(
-        SelectFwe(score_func=f_regression, alpha=0.048),
-        StackingEstimator(estimator=LassoLarsCV(normalize=False)),
-        DecisionTreeRegressor(max_depth=10, min_samples_leaf=7, min_samples_split=20)
+        SelectFwe(score_func=f_regression, alpha=0.001),
+        StackingEstimator(
+            estimator=ExtraTreesRegressor(bootstrap=True, max_features=0.35000000000000003, min_samples_leaf=17,
+                                          min_samples_split=18, n_estimators=50)),
+        SelectFwe(score_func=f_regression, alpha=0.044),
+        SelectFwe(score_func=f_regression, alpha=0.017),
+        StackingEstimator(
+            estimator=ExtraTreesRegressor(bootstrap=True, max_features=0.35000000000000003, min_samples_leaf=17,
+                                          min_samples_split=18, n_estimators=100)),
+        XGBRegressor(learning_rate=0.01, max_depth=6, min_child_weight=10, n_estimators=50, n_jobs=1,
+                     objective="reg:squarederror", subsample=1.0, verbosity=0)
     )
 
     import xgboost as xgb

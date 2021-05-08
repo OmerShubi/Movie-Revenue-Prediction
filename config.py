@@ -9,21 +9,45 @@ scaler_path = 'data/pipeline_scaler.pkl'
 encoder_path = 'data/encoders.pkl'
 train_path = 'train.tsv'
 test_path = 'test.tsv'
-max_values = 5000
+max_values = 1500
 our_log_path = 'log/training_log.log'
 tpot_log_path = "log/tpot_log.log"
-custom_regressor_config_dict = {
+stop_words = {'ourselves', 'hers', 'between',
+              'yourself', 'but', 'again', 'there',
+              'about', 'once', 'during', 'out', 'very',
+              'having', 'with', 'they', 'own', 'an',
+              'be', 'some', 'for', 'do', 'its', 'yours',
+              'such', 'into', 'of', 'most', 'itself', 'other',
+              'off', 'is', 's', 'am', 'or', 'who', 'as', 'from',
+              'him', 'each', 'the', 'themselves', 'until', 'below',
+              'are', 'we', 'these', 'your', 'his', 'through', 'don',
+              'nor', 'me', 'were', 'her', 'more', 'himself', 'this',
+              'down', 'should', 'our', 'their', 'while', 'above',
+              'both', 'up', 'to', 'ours', 'had', 'she', 'all', 'no',
+              'when', 'at', 'any', 'before', 'them', 'same', 'and',
+              'been', 'have', 'in', 'will', 'on', 'does', 'yourselves',
+              'then', 'that', 'because', 'what', 'over', 'why', 'so',
+              'can', 'did', 'not', 'now', 'under', 'he', 'you', 'herself',
+              'has', 'just', 'where', 'too', 'only', 'myself', 'which',
+              'those', 'i', 'after', 'few', 'whom', 't', 'being', 'if',
+              'theirs', 'my', 'against', 'a', 'by', 'doing', 'it', 'how',
+              'further', 'was', 'here', 'than'}
 
+generations = None
+population_size = 10
+max_eval_time_mins = 20
+max_time_mins = 2160
+n_jobs = 3
+custom_regressor_config_dict = {
     'sklearn.ensemble.ExtraTreesRegressor': {
-        'n_estimators': [100],
+        'n_estimators': [25, 50, 100, 200],
         'max_features': np.arange(0.05, 1.01, 0.05),
         'min_samples_split': range(2, 21),
         'min_samples_leaf': range(1, 21),
         'bootstrap': [True, False]
     },
-
     'sklearn.ensemble.GradientBoostingRegressor': {
-        'n_estimators': [100],
+        'n_estimators': [25, 50, 100, 200],
         'loss': ["ls", "lad", "huber", "quantile"],
         'learning_rate': [1e-3, 1e-2, 1e-1, 0.5, 1.],
         'max_depth': range(1, 11),
@@ -35,13 +59,13 @@ custom_regressor_config_dict = {
     },
 
     'sklearn.ensemble.AdaBoostRegressor': {
-        'n_estimators': [100],
+        'n_estimators': [25, 50, 100, 200],
         'learning_rate': [1e-3, 1e-2, 1e-1, 0.5, 1.],
         'loss': ["linear", "square", "exponential"]
     },
 
     'sklearn.ensemble.RandomForestRegressor': {
-        'n_estimators': [100],
+        'n_estimators': [25, 50, 100, 200],
         'max_features': np.arange(0.05, 1.01, 0.05),
         'min_samples_split': range(2, 21),
         'min_samples_leaf': range(1, 21),
@@ -49,14 +73,14 @@ custom_regressor_config_dict = {
     },
 
     'xgboost.XGBRegressor': {
-        'n_estimators': [100],
+        'n_estimators': [25, 50, 100, 200],
         'max_depth': range(1, 11),
         'learning_rate': [1e-3, 1e-2, 1e-1, 0.5, 1.],
         'subsample': np.arange(0.05, 1.01, 0.05),
         'min_child_weight': range(1, 21),
         'n_jobs': [1],
         'verbosity': [0],
-        'objective': ['reg:squarederror']
+        'objective': ['reg:squarederror', 'reg:squaredlogerror']
     },
 
     'sklearn.linear_model.SGDRegressor': {
@@ -95,7 +119,7 @@ custom_regressor_config_dict = {
 
     # Selectors
     'sklearn.feature_selection.SelectFwe': {
-        'alpha': np.arange(0, 0.05, 0.001),
+        'alpha': np.arange(0, 0.1, 0.001),
         'score_func': {
             'sklearn.feature_selection.f_regression': None
         }
@@ -116,7 +140,7 @@ custom_regressor_config_dict = {
         'threshold': np.arange(0, 1.01, 0.05),
         'estimator': {
             'sklearn.ensemble.ExtraTreesRegressor': {
-                'n_estimators': [100],
+                'n_estimators': [25, 50, 100, 200],
                 'max_features': np.arange(0.05, 1.01, 0.05)
             }
         }

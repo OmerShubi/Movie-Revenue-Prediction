@@ -1,9 +1,8 @@
 from tpot import TPOTRegressor
-import pandas as pd
 from sklearn.metrics import mean_squared_log_error
 from sklearn.metrics import make_scorer
-from config import parsed_train_path, parsed_test_path, checkpoint_folder, our_log_path, tpot_log_path, \
-    custom_regressor_config_dict
+from config import parsed_train_path, parsed_test_path, checkpoint_folder, our_log_path, \
+    custom_regressor_config_dict, generations, population_size, max_eval_time_mins, max_time_mins, n_jobs
 import numpy as np
 import logging
 from pprint import pformat
@@ -47,11 +46,6 @@ if __name__ == '__main__':
         parsed_test_label = np.load(f)
 
     logger.info("Finished loading data")
-    generations = None
-    population_size = 10
-    max_eval_time_mins = 20
-    max_time_mins = 2160
-    n_jobs = 1
     logger.info(f"Run params: {generations=}, {population_size=}, {max_eval_time_mins=}, {max_time_mins=}"
                 f"{n_jobs=}, {custom_regressor_config_dict=}")
 

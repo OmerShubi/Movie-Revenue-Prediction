@@ -35,9 +35,9 @@ stop_words = {'ourselves', 'hers', 'between',
 
 generations = None
 population_size = 10
-max_eval_time_mins = 20
-max_time_mins = 2160
-n_jobs = 3
+max_eval_time_mins = 35
+max_time_mins = 2400
+n_jobs = 1
 custom_regressor_config_dict = {
     'sklearn.ensemble.ExtraTreesRegressor': {
         'n_estimators': [25, 50, 100, 200],

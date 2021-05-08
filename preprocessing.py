@@ -138,14 +138,15 @@ def create_sample(data):
     data = data.head(len(data.columns))
     data = data.copy(deep=True)
     for i in range(len(data.columns)):
-        data.iloc[i,i] = None
+        data.iloc[i, i] = None
     data.to_csv("sample.tsv", sep="\t")
 
 
 if __name__ == '__main__':
     parse_train = True
     parse_test = True
-    # TODO check none values on the final features
+
+    # check none values
     # create_sample(pd.read_csv(test_path, sep="\t", index_col='id', parse_dates=['release_date']))
     # sample_data = pd.read_csv("sample.tsv", sep="\t", index_col='id', parse_dates=['release_date'])
     # parsed_sample_data, parsed_sample_label, parsed_sample_index = parse_data(sample_data, train=True)

@@ -33,5 +33,10 @@ prediction_df['revenue'] = results
 # export prediction results
 prediction_df.to_csv(result_path, index=False, header=False)
 
+# check the loading file
+prediction_df = pd.read_csv(result_path,header=None)
+results = np.log1p(prediction_df[1])
+print(f"Loss on data {-my_custom_accuracy(parsed_log_label, results)}")
+
 
 

@@ -51,7 +51,20 @@ def rmsle(y_true, y_pred):
         ValueError("Mismatched dimensions between input vectors: {}, {}".format(y_true.shape, y_pred.shape))
     return np.sqrt((1/len(y_true)) * np.sum(np.power(np.log(y_true + 1) - np.log(y_pred + 1), 2)))
 
-def define_model():
+
+
+if __name__ == '__main__':
+
+    with open(parsed_train_path, 'rb') as f:
+        parsed_train_data = np.load(f)
+        parsed_train_label = np.load(f)
+        parsed_train_log_label = np.load(f)
+    with open(parsed_test_path, 'rb') as f:
+        parsed_test_data = np.load(f)
+        parsed_test_label = np.load(f)
+        parsed_test_log_label = np.load(f)
+
+    #exported_pipeline = define_model()
     # Change the model
     # # Average CV score on the training set was: -2.6181800521534355
     # exported_pipeline = make_pipeline(
@@ -85,67 +98,51 @@ def define_model():
     #                             colsample_bylevel=0.5))
 
     # Average CV score on the training set was: -2.315083207257054
+
+
+
     # exported_pipeline = make_pipeline(
     #     StackingEstimator(estimator=RandomForestRegressor(bootstrap=True, max_features=0.55, min_samples_leaf=17,
-    #                                                       min_samples_split=15, n_estimators=50)),
+    #                                                       min_samples_split=15, n_estimators=50, random_state=1)),
     #     StackingEstimator(
-    #         estimator=RandomForestRegressor(bootstrap=True, max_features=1.0, min_samples_leaf=1, min_samples_split=14,
-    #                                         n_estimators=25)),
+    #         estimator=RandomForestRegressor(bootstrap=True, max_features=1.0, min_samples_leaf=1,
+    #                                         min_samples_split=14,n_estimators=25,random_state=1)),
     #     RandomForestRegressor(bootstrap=False, max_features=0.9000000000000001, min_samples_leaf=6,
-    #                           min_samples_split=14, n_estimators=25)
+    #                           min_samples_split=14, n_estimators=25, random_state=1)
     # )
 
     # Average CV score on the training set was: -2.315303012402409
     exported_pipeline = make_pipeline(
         StackingEstimator(estimator=RandomForestRegressor(bootstrap=True, max_features=0.55, min_samples_leaf=17,
-                                                          min_samples_split=15, n_estimators=50)),
+                                                          min_samples_split=15, n_estimators=50, random_state=1)),
         StackingEstimator(
-            estimator=RandomForestRegressor(bootstrap=True, max_features=1.0, min_samples_leaf=1, min_samples_split=8,
-                                            n_estimators=25)),
+            estimator=RandomForestRegressor(bootstrap=True, max_features=1.0, min_samples_leaf=1,
+                                            min_samples_split=8,
+                                            n_estimators=25, random_state=1)),
         RandomForestRegressor(bootstrap=False, max_features=0.9000000000000001, min_samples_leaf=6,
-                              min_samples_split=14, n_estimators=25)
+                              min_samples_split=14, n_estimators=25, random_state=1)
     )
 
     # Fix random state in exported estimator
     if hasattr(exported_pipeline, 'random_state'):
         setattr(exported_pipeline, 'random_state', 1)
 
-    return exported_pipeline
-
-
-if __name__ == '__main__':
-
-    with open(parsed_train_path, 'rb') as f:
-        parsed_train_data = np.load(f)
-        parsed_train_label = np.load(f)
-        parsed_train_log_label = np.load(f)
-    with open(parsed_test_path, 'rb') as f:
-        parsed_test_data = np.load(f)
-        parsed_test_label = np.load(f)
-        parsed_test_log_label = np.load(f)
-
-    #exported_pipeline = define_model()
-    exported_pipeline_log = define_model()
 
     #exported_pipeline.fit(parsed_train_data, parsed_train_label)
-    exported_pipeline_log.fit(parsed_train_data, parsed_train_log_label)
-    dump(exported_pipeline_log, model_name)
+    exported_pipeline.fit(parsed_train_data, parsed_train_log_label)
+    dump(exported_pipeline, model_name)
 
     #results_train = exported_pipeline.predict(parsed_train_data)
     #print(f"Loss on train data - regular revenue {-my_custom_accuracy(parsed_train_label, results_train)}")
-    results_train_log = exported_pipeline_log.predict(parsed_train_data)
+    results_train_log = exported_pipeline.predict(parsed_train_data)
     #results_train = np.expm1(results_train_log)
     print(f"Loss on train data - log revenue {-my_custom_accuracy(parsed_train_log_label, results_train_log)}")
 
     #results_test = exported_pipeline.predict(parsed_test_data)
     #print(f"Loss on test data - regular revenue {-my_custom_accuracy(parsed_test_label, results_test)}")
-    results_test_log = exported_pipeline_log.predict(parsed_test_data)
+    results_test_log = exported_pipeline.predict(parsed_test_data)
     #results_test = np.expm1(results_test_log)
     print(f"Loss on test data - log revenue {-my_custom_accuracy(parsed_test_log_label, results_test_log)}")
-
-    #1.9572986228697067
-    model = load(model_name)
-    print(f"Loss on data {-my_custom_accuracy(parsed_test_log_label, model.predict(parsed_test_data))}")
 
     # ### Example - Calculating RMSLE
     # res = rmsle(parsed_test_label, results)

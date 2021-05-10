@@ -74,8 +74,9 @@ def parse_data(data, train=True):
     data.drop(["backdrop_path", "homepage", "imdb_id", "status", "poster_path", "revenue"], inplace=True, axis=1)
 
     numerical_columns = ["popularity", "budget", "runtime", "vote_average", "vote_count",
-                         "month_sin", "month_cos", "day_sin", "day_cos", "month", "day", "year",
-                         "day_of_week", "quarter", "inflationBudget", "numKeywords", "numcast", "budgetYearRatio"]
+                         "month_sin", "month_cos", "day_sin", "day_cos", "month", "day",
+                         "year", "day_of_week", "quarter", "inflationBudget", "numKeywords",
+                         "numcast", "budgetYearRatio", "logBudget"]
     dummy_columns = ["collection_name", "original_language"]
     multi_dummy_columns = ['cast', 'crew', 'genres', 'spoken_languages', 'production_companies',
                            'production_countries', 'Keywords']
@@ -113,8 +114,9 @@ def parse_data(data, train=True):
 
     if train:
         # Normalized numerical features
-        pipe = Pipeline([('imputer', SimpleImputer(missing_values=np.nan, strategy='mean')),
-                         ('standard_scaler', StandardScaler()), ('minmax_scaler', MinMaxScaler(clip=True))])
+        #pipe = Pipeline([('imputer', SimpleImputer(missing_values=np.nan, strategy='mean')),
+        #                 ('standard_scaler', StandardScaler()), ('minmax_scaler', MinMaxScaler(clip=True))])
+        pipe = Pipeline([('imputer', SimpleImputer(missing_values=np.nan, strategy='mean'))])
         pipe.fit(data[numerical_columns].to_numpy())
         joblib.dump(pipe, scaler_path)
 

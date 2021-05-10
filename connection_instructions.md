@@ -13,3 +13,6 @@ pass is jupyterpa55
 `jupyter notebook password`
 **maybe need 
 `jupyter notebook --generate-config` on server
+
+To export report to html without code -
+`jupyter nbconvert --to html --no-input report.ipynb`

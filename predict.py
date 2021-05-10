@@ -5,6 +5,7 @@ from preprocessing import parse_data
 from joblib import load
 from config import model_name, result_path
 import warnings
+import numpy as np
 warnings.filterwarnings("ignore")
 
 # Parsing script arguments
@@ -16,16 +17,18 @@ args = parser.parse_args()
 data = pd.read_csv(args.tsv_path, sep="\t", index_col='id', parse_dates=['release_date'])
 
 # Parse Data
-parsed_data, parsed_label, parsed_index = parse_data(data, train=False)
+parsed_data, parsed_label, parsed_index, parsed_log_label = parse_data(data, train=False)
 model = load(model_name)
 results = model.predict(parsed_data)
-results[results<0] = 0.0
+# results = np.expm1(results)
+#results[results<0] = 0.0
+print(f"Loss on data {-my_custom_accuracy(parsed_log_label, results)}")
 
 prediction_df = pd.DataFrame(columns=['id', 'revenue'])
 prediction_df['id'] = parsed_index
+results = np.expm1(results)
 prediction_df['revenue'] = results
 
-print(f"Loss on data {-my_custom_accuracy(parsed_label, results)}")
 
 # export prediction results
 prediction_df.to_csv(result_path, index=False, header=False)

@@ -9,7 +9,9 @@ from pprint import pformat
 
 
 def my_custom_accuracy(y_true, y_pred):
-    y_pred[y_pred<0] = 0.0
+    # y_pred[y_pred<0] = 0.0
+    y_pred = np.expm1(y_pred)
+    y_true = np.expm1(y_true)
     return -np.sqrt(mean_squared_log_error(y_true, y_pred))
 
 
@@ -41,9 +43,11 @@ if __name__ == '__main__':
     with open(parsed_train_path, 'rb') as f:
         parsed_train_data = np.load(f)
         parsed_train_label = np.load(f)
+        parsed_train_log_label = np.load(f)
     with open(parsed_test_path, 'rb') as f:
         parsed_test_data = np.load(f)
         parsed_test_label = np.load(f)
+        parsed_test_log_label = np.load(f)
 
     logger.info("Finished loading data")
     logger.info(f"Run params: {generations=}, {population_size=}, {max_eval_time_mins=}, {max_time_mins=}"
@@ -61,10 +65,10 @@ if __name__ == '__main__':
                          periodic_checkpoint_folder=checkpoint_folder,
                          config_dict=custom_regressor_config_dict)
 
-    tpot.fit(parsed_train_data, parsed_train_label)
+    tpot.fit(parsed_train_data, parsed_train_log_label)
     logger.info("Finished fitting the model")
     logger.info(f"The best pipeline \n {tpot.fitted_pipeline_}")
-    logger.info(f"Loss on test data {-tpot.score(parsed_test_data, parsed_test_label)}")
+    logger.info(f"Loss on test data {-tpot.score(parsed_test_data, parsed_test_log_label)}")
     logger.info(f"Trials \n {pformat(tpot.evaluated_individuals_)}")
     tpot.export('best_model.py')
 

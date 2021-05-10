@@ -48,6 +48,9 @@ def save_most_common(data, col_name, k):
 
 def process_date_feature(data):
     data["release_date"].fillna(method="pad", inplace=True)
+    data['year'] = data.release_date.dt.year
+    data['day_of_week'] = data.release_date.dt.dayofweek
+    data['quarter'] = data.release_date.dt.quarter
     data['month'] = data.release_date.dt.month
     data = encode_date(data, 'month', 12)
     data['day'] = data.release_date.dt.day
@@ -63,11 +66,16 @@ def treat_str(data, col_name):
 
 def parse_data(data, train=True):
     data_label = data["revenue"]
+    data_log_label = np.log1p(data["revenue"])
+    data['has_homepage'] = 1
+    data.loc[pd.isnull(data['homepage']), "has_homepage"] = 0
+
     # remove features - unreasonable & 1 uniqe value features
     data.drop(["backdrop_path", "homepage", "imdb_id", "status", "poster_path", "revenue"], inplace=True, axis=1)
 
     numerical_columns = ["popularity", "budget", "runtime", "vote_average", "vote_count",
-                         "month_sin", "month_cos", "day_sin", "day_cos", "month", "day"]
+                         "month_sin", "month_cos", "day_sin", "day_cos", "month", "day", "year",
+                         "day_of_week", "quarter", "inflationBudget", "numKeywords", "numcast", "budgetYearRatio"]
     dummy_columns = ["collection_name", "original_language"]
     multi_dummy_columns = ['cast', 'crew', 'genres', 'spoken_languages', 'production_companies',
                            'production_countries', 'Keywords']
@@ -77,6 +85,8 @@ def parse_data(data, train=True):
     data = treat_dict_column(data, "belongs_to_collection", "collection_name", "name")
     for col in multi_dummy_columns:
         data = treat_list_of_dicts_column(data, col)
+        if col in ["Keywords", "cast"]:
+            data[f'num{col}'] = data[col].apply(lambda x: len(x))
         if train:
             data = save_most_common(data, col, max_values)
 
@@ -92,8 +102,14 @@ def parse_data(data, train=True):
     data['video'].fillna(0, inplace=True)
     data['video'] = data['video'].astype(int)
 
-    # Convert release_date to month,day,month_sin,month_cos,day_sin,day_cos,weekend
+    # Convert release_date to month,day,month_sin,month_cos,day_sin,day_cos,weekend, year, day_of_week, quarter
     data = process_date_feature(data)
+
+    data['inflationBudget'] = data['budget'] + (data['budget'] * 1.8)/(100 * (data["year"].max()+1 - data['year']))
+    data['logBudget'] = np.log1p(data['budget'])
+    data['isTitleDifferent'] = 1
+    data.loc[data['original_title'] == data['title'], "isTitleDifferent"] = 0
+    data['budgetYearRatio'] =  data['budget'] / data['year']**2
 
     if train:
         # Normalized numerical features
@@ -132,7 +148,7 @@ def parse_data(data, train=True):
         data.drop(col_m, inplace=True, axis=1)
     data_arr = np.concatenate([data.to_numpy()] + data_arr_dummies, axis=1)
 
-    return data_arr, data_label.to_numpy(), data.index
+    return data_arr, data_label.to_numpy(), data.index, data_log_label.to_numpy()
 
 def create_sample(data):
     data = data.head(len(data.columns))
@@ -153,18 +169,20 @@ if __name__ == '__main__':
 
     if parse_train:
         train_data = pd.read_csv(train_path, sep="\t", index_col='id', parse_dates=['release_date'])
-        parsed_train_data, parsed_train_label, parsed_train_index = parse_data(train_data, train=True)
+        parsed_train_data, parsed_train_label, parsed_train_index, parsed_train_log_label = parse_data(train_data, train=True)
         with open(parsed_train_path, 'wb') as f:
             np.save(f, parsed_train_data)
             np.save(f, parsed_train_label)
+            np.save(f, parsed_train_log_label)
             np.save(f, parsed_train_index)
         print(f"Number of features {parsed_train_data.shape[1]}")
 
     if parse_test:
         test_data = pd.read_csv(test_path, sep="\t", index_col='id', parse_dates=['release_date'])
-        parsed_test_data, parsed_test_label, parsed_test_index = parse_data(test_data, train=False)
+        parsed_test_data, parsed_test_label, parsed_test_index, parsed_test_log_label = parse_data(test_data, train=False)
         with open(parsed_test_path, 'wb') as f:
             np.save(f, parsed_test_data)
             np.save(f, parsed_test_label)
+            np.save(f, parsed_test_log_label)
             np.save(f, parsed_test_index)
 

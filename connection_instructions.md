@@ -14,4 +14,4 @@ locally:
 
 
 Other - to export report to html without code -
-`jupyter nbconvert --to html --no-input report.ipynb`
+`jupyter nbconvert --to html --no-input final_report.ipynb`

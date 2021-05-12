@@ -1,13 +1,13 @@
 # hw1
 
 #TODOS
-0. finish report
-1. save report to html then pdf
 2. make repo public
 3. delete unwanted files from repo and save pretrained model, scalers and such   
 4. recreate env and test model
 
 python code to predict the revenue of movies.
+
+Detailed report can be found under `final_report` file.
 
 To get the code simply clone it - 
 `git clone https://github.com/scaperex/094295_hw1.git`

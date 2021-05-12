@@ -1,7 +1,11 @@
 locally:
 `ssh -L 8080:localhost:8080 student@dpa2020s-0003.eastus.cloudapp.azure.com`
 
+and enter password
+
+
 on remote:
+`conda activate hw1_env`
 `jupyter notebook --no-browser --port=8080`
 
 locally:

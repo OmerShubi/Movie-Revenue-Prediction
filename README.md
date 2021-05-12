@@ -1,6 +1,7 @@
 # hw1
 
 #TODOS
+0. finish report
 1. save report to html then pdf
 2. make repo public
 3. delete unwanted files from repo and save pretrained model, scalers and such   
@@ -26,6 +27,7 @@ Additionally, the code consists of -
 a np.array.
 - Model selection process is by `model.py`.
 - Different parameters are given by `config.py`.
+- To retrain the model with the best configuration that we got run `best_model_template.py`
 
 Note, the data is expected to be given in the same format as used for training.
 

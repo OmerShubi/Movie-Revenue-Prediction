@@ -15,4 +15,3 @@ dependencies:
       - tqdm==4.60.0
       - stopit==1.1.2
       - xgboost==1.4.1
-# TODO update based on actual packages installed and their versions

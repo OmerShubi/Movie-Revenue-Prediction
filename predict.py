@@ -18,12 +18,18 @@ data = pd.read_csv(args.tsv_path, sep="\t", index_col='id', parse_dates=['releas
 
 # Parse Data
 parsed_data, parsed_label, parsed_index, parsed_log_label = parse_data(data, train=False)
+
+# Load model
 model = load(model_name)
+
+# Predict on test
 results = model.predict(parsed_data)
+
 # results = np.expm1(results)
 #results[results<0] = 0.0
-print(f"Loss on data {-my_custom_accuracy(parsed_log_label, results)}")
+# print(f"Loss on data {-my_custom_accuracy(parsed_log_label, results)}")
 
+# Save to dataframe
 prediction_df = pd.DataFrame(columns=['id', 'revenue'])
 prediction_df['id'] = parsed_index
 results = np.expm1(results)
@@ -34,9 +40,9 @@ prediction_df['revenue'] = results
 prediction_df.to_csv(result_path, index=False, header=False)
 
 # check the loading file
-prediction_df = pd.read_csv(result_path,header=None)
-results = np.log1p(prediction_df[1])
-print(f"Loss on data {-my_custom_accuracy(parsed_log_label, results)}")
+# prediction_df = pd.read_csv(result_path,header=None)
+# results = np.log1p(prediction_df[1])
+# print(f"Loss on data {-my_custom_accuracy(parsed_log_label, results)}")
 
 
 

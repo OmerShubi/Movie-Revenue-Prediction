@@ -13,7 +13,8 @@ To get the code simply clone it -
 `git clone https://github.com/scaperex/094295_hw1.git`
 
 Then, to setup the environment - 
-`conda env create -f environment.yml`
+- `cd 094295_hw1`
+- `conda env create -f environment.yml`
 
 Activate it by -
 `conda activate hw1_env`

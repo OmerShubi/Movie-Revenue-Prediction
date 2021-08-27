@@ -1,4 +1,4 @@
-name: hw1_env
+name: movie_revenue
 dependencies:
   - python=3
   - nb_conda

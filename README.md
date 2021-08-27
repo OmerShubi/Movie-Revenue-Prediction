@@ -1,23 +1,18 @@
-# hw1
-
-#TODOS
-2. make repo public
-3. delete unwanted files from repo and save pretrained model, scalers and such   
-4. recreate env and test model
+# Movie Revenue Prediction
 
 python code to predict the revenue of movies.
 
 Detailed report can be found under `final_report` file.
 
 To get the code simply clone it - 
-`git clone https://github.com/scaperex/094295_hw1.git`
+`git clone https://github.com/scaperex/Movie-Revenue-Prediction.git`
 
 Then, to setup the environment - 
-- `cd 094295_hw1`
+- `cd Movie-Revenue-Prediction`
 - `conda env create -f environment.yml`
 
 Activate it by -
-`conda activate hw1_env`
+`conda activate movie_revenue`
 
 Finally, to evaluate the pretrained model simply run 
 `python predict.py <data_path.tsv>`.

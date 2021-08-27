@@ -1,9 +1,4 @@
-# hw1
-
-#TODOS
-2. make repo public
-3. delete unwanted files from repo and save pretrained model, scalers and such   
-4. recreate env and test model
+# Movie Revenue Prediction
 
 python code to predict the revenue of movies.
 
